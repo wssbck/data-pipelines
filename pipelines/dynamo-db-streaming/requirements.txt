@@ -1,0 +1,10 @@
+aws-cdk.core==1.33.1
+aws-cdk.aws-dynamodb==1.33.1
+aws-cdk.aws-iam==1.33.1
+aws-cdk.aws-kinesisfirehose==1.33.1
+aws-cdk.aws-lambda==1.33.1
+aws-cdk.aws-lambda-destinations==1.33.1
+aws-cdk.aws-lambda-event-sources==1.33.1
+aws-cdk.aws-sns==1.33.1
+aws-cdk.aws-sns-subscriptions==1.33.1
+aws-cdk.aws-sqs==1.33.1
