@@ -1,7 +1,6 @@
 import aws_cdk.core as core
 import aws_cdk.aws_dynamodb as dynamodb
 import aws_cdk.aws_lambda as lmbd
-import aws_cdk.aws_lambda_destinations as lmbd_dest
 import aws_cdk.aws_lambda_event_sources as lmbd_src
 import aws_cdk.aws_sns as sns
 import aws_cdk.aws_sns_subscriptions as sns_subs
@@ -27,15 +26,6 @@ class PipelineStack(core.Stack):
                                       billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
                                       stream=dynamodb.StreamViewType.NEW_IMAGE)
 
-        # SNS Topic
-        sns_topic = sns.Topic(self, 'rops_sns_topic', display_name='rops_sns_topic')
-
-        # SQS queues receiving messages from the SNS Topic
-        for q in queues:
-            sqs_queue = sqs.Queue(self, q, queue_name=q)
-            sns_sub = sns_subs.SqsSubscription(sqs_queue)
-            sns_topic.add_subscription(sns_sub)
-
         # Lambda function bridging DynamoDB and SNS
         lambda_code_path = join_path(dirname(realpath(__file__)), 'lambda')
         lambda_code = lmbd.Code.from_asset(lambda_code_path)
@@ -46,11 +36,24 @@ class PipelineStack(core.Stack):
                                       handler='bridge.handler',
                                       runtime=lmbd.Runtime.PYTHON_3_7,
                                       environment={},
-                                      memory_size=256,
-                                      on_success=lmbd_dest.SnsDestination(sns_topic))
+                                      memory_size=128)
 
         lambda_evnt_src = lmbd_src.DynamoEventSource(dynamo_table,
                                                 starting_position=lmbd.StartingPosition.LATEST,
                                                 batch_size=1,
                                                 parallelization_factor=1)
         lambda_bridge.add_event_source(lambda_evnt_src)
+                     
+
+        # SNS Topic
+        sns_topic = sns.Topic(self, 'rops_sns_topic', display_name='rops_sns_topic')
+        
+        # SQS queues receiving messages from the SNS Topic
+        for q in queues:
+            sqs_queue = sqs.Queue(self, q, queue_name=q)
+            sns_sub = sns_subs.SqsSubscription(sqs_queue)
+            sns_topic.add_subscription(sns_sub)
+
+        # Connect Lambda and SNS
+        sns_topic.grant_publish(lambda_bridge)
+        lambda_bridge.add_environment('SNS_TOPIC', sns_topic.topic_arn)
