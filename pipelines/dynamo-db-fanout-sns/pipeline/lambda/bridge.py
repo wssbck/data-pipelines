@@ -9,7 +9,7 @@ sns_arn = os.environ['SNS_TOPIC']
 
 def handler(event, context):
 
-    dynamodb_entry = event['Records'][0]['dynamodb']
+    dynamodb_entry = event['Records'][0]
     sns_message = json.dumps(dynamodb_entry)
 
     response = sns.publish(
