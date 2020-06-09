@@ -6,6 +6,6 @@ from pipeline.pipeline_stack import PipelineStack
 
 
 app = App()
-PipelineStack(app, "serverless-pipeline", env={'region': 'eu-central-1'})
+PipelineStack(app, "dynamo-db-fanout-sns", env={'region': 'eu-central-1'})
 
 app.synth()

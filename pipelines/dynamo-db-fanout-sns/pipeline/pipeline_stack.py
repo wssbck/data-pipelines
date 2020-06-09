@@ -9,7 +9,9 @@ import aws_cdk.aws_sqs as sqs
 from os.path import dirname, join as join_path, realpath
 
 
-queues = ['rops_queue_1', 'rops_queue_2', 'rops_queue_3', 'rops_queue_4']
+queues = ['fanout_queue_1',
+          'fanout_queue_2',
+          'fanout_queue_3']
 
 
 class PipelineStack(core.Stack):
@@ -20,8 +22,8 @@ class PipelineStack(core.Stack):
         dynamo_part_key = dynamodb.Attribute(name='order_id',
                                              type=dynamodb.AttributeType.STRING)
 
-        dynamo_table = dynamodb.Table(self, 'rops_dynamo_db_table',
-                                      table_name='rops_dynamo_db_table',
+        dynamo_table = dynamodb.Table(self, 'dynamo_db_table',
+                                      table_name='fanout_dynamo_db_table',
                                       partition_key=dynamo_part_key,
                                       billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
                                       stream=dynamodb.StreamViewType.NEW_IMAGE)
@@ -30,8 +32,8 @@ class PipelineStack(core.Stack):
         lambda_code_path = join_path(dirname(realpath(__file__)), 'lambda')
         lambda_code = lmbd.Code.from_asset(lambda_code_path)
 
-        lambda_bridge = lmbd.Function(self, 'rops_lambda_bridge',
-                                      function_name='rops_lambda_bridge',
+        lambda_bridge = lmbd.Function(self, 'lambda_bridge',
+                                      function_name='lambda_bridge',
                                       code=lambda_code,
                                       handler='bridge.handler',
                                       runtime=lmbd.Runtime.PYTHON_3_7,
@@ -46,7 +48,7 @@ class PipelineStack(core.Stack):
                      
 
         # SNS Topic
-        sns_topic = sns.Topic(self, 'rops_sns_topic', display_name='rops_sns_topic')
+        sns_topic = sns.Topic(self, 'sns_topic', display_name='sns_topic')
         
         # SQS queues receiving messages from the SNS Topic
         for q in queues:
